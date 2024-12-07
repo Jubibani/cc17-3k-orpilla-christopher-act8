@@ -3,24 +3,10 @@ package com.example.bookshelf
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.example.bookshelf.ui.theme.BookshelfTheme
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.with
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.ui.unit.dp
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -40,9 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.bookshelf.data.Book
-import com.example.bookshelf.ui.BookshelfUiState
-import com.example.bookshelf.ui.BookshelfViewModel
+import com.example.bookshelf.api.BookItem
+import com.example.bookshelf.ui.theme.BookshelfTheme
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
@@ -60,7 +45,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -118,19 +102,6 @@ fun BookshelfApp(viewModel: BookshelfViewModel = viewModel()) {
                     is BookshelfUiState.Error -> ErrorAnimation(state.message)
                 }
             }
-            
-            // Remove this Spacer and the second AnimatedContent block
-            // Spacer(modifier = Modifier.height(16.dp))
-            // 
-            // AnimatedContent(
-            //     targetState = uiState,
-            //     transitionSpec = {
-            //         fadeIn(animationSpec = tween(300)) with
-            //         fadeOut(animationSpec = tween(300))
-            //     }
-            // ) { state ->
-            //     ...
-            // }
         }
     }
 }
@@ -139,7 +110,7 @@ fun BookshelfApp(viewModel: BookshelfViewModel = viewModel()) {
 @Composable
 fun SearchBar(viewModel: BookshelfViewModel) {
     OutlinedTextField(
-        value = viewModel.searchQuery,
+        value = viewModel.searchQuery.value,
         onValueChange = { viewModel.onSearchQueryChange(it) },
         label = { Text("Search books", color = Color.White) },
         modifier = Modifier
@@ -240,9 +211,8 @@ fun ErrorAnimation(message: String) {
     }
 }
 
-// Update your existing BookList and BookItem composables to match the new style
 @Composable
-fun BookList(books: List<Book>) {
+fun BookList(books: List<BookItem>) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 150.dp),
         contentPadding = PaddingValues(8.dp)
@@ -254,7 +224,7 @@ fun BookList(books: List<Book>) {
 }
 
 @Composable
-fun BookItem(book: Book) {
+fun BookItem(book: BookItem) {
     Card(
         modifier = Modifier
             .padding(8.dp)

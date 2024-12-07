@@ -1,23 +1,18 @@
 package com.example.bookshelf.data
 
-import com.example.bookshelf.network.BookApi
+import com.example.bookshelf.api.BookApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class BookRepository {
-    private val bookApiService = BookApi.retrofitService
-
-    suspend fun searchBooks(query: String): List<Book> {
+class BookRepository(private val bookApi: BookApi) {
+    suspend fun searchBooks(query: String): Result<List<Book>> {
         return withContext(Dispatchers.IO) {
-            val response = bookApiService.searchBooks(query)
-            val books = response.items ?: emptyList()
-            books.map { book ->
-                val bookInfo = bookApiService.getBookInfo(book.id)
-                bookInfo.copy(volumeInfo = bookInfo.volumeInfo.copy(
-                    imageLinks = bookInfo.volumeInfo.imageLinks?.copy(
-                        thumbnail = bookInfo.volumeInfo.imageLinks.thumbnail?.replace("http:", "https:")
-                    )
-                ))
+            try {
+                val response = bookApi.searchBooks(query)
+                // Assuming the response is the BookResponse object itself
+                Result.success(response.items ?: emptyList())
+            } catch (e: Exception) {
+                Result.failure(e)
             }
         }
     }
