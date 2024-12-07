@@ -1,14 +1,13 @@
 package com.example.bookshelf.data
 
+data class BookResponse(
+    val items: List<Book>?
+)
+
 data class Book(
     val id: String,
     val volumeInfo: VolumeInfo
-) {
-    val items: List<Book>?
-        get() {
-            TODO()
-        }
-}
+)
 
 data class VolumeInfo(
     val title: String,

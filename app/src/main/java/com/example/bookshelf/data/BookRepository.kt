@@ -9,7 +9,6 @@ class BookRepository(private val bookApi: BookApi) {
         return withContext(Dispatchers.IO) {
             try {
                 val response = bookApi.searchBooks(query)
-                // Assuming the response is the BookResponse object itself
                 Result.success(response.items ?: emptyList())
             } catch (e: Exception) {
                 Result.failure(e)

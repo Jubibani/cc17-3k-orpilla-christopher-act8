@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -51,7 +52,11 @@ class MainActivity : ComponentActivity() {
 fun BookshelfApp(viewModel: BookshelfViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     var isAnimating by remember { mutableStateOf(true) }
+    var selectedBook by remember { mutableStateOf<BookItem?>(null) }
 
+    val onBookClick: (BookItem) -> Unit = { book ->
+        selectedBook = book
+    }
     LaunchedEffect(key1 = isAnimating) {
         delay(3000)
         isAnimating = !isAnimating
@@ -97,12 +102,32 @@ fun BookshelfApp(viewModel: BookshelfViewModel = viewModel()) {
                 when (state) {
                     is BookshelfUiState.Initial -> IdleAnimation(isAnimating)
                     is BookshelfUiState.Loading -> LoadingAnimation()
-                    is BookshelfUiState.Success -> BookList(books = state.books)
+                    is BookshelfUiState.Success -> BookList(books = state.books, onBookClick = onBookClick)
                     is BookshelfUiState.Empty -> EmptyStateAnimation()
                     is BookshelfUiState.Error -> ErrorAnimation(state.message)
                 }
             }
         }
+    }
+
+    // Display selected book details
+    selectedBook?.let { book ->
+        AlertDialog(
+            onDismissRequest = { selectedBook = null },
+            title = { Text(book.volumeInfo.title) },
+            text = {
+                Column {
+                    Text("Author: ${book.volumeInfo.authors?.joinToString() ?: "Unknown"}")
+//                    Text("Published: ${book.volumeInfo.publishedDate ?: "Unknown"}")
+                    Text("Description: ${book.volumeInfo.description ?: "No description available"}")
+                }
+            },
+            confirmButton = {
+                Button(onClick = { selectedBook = null }) {
+                    Text("Close")
+                }
+            }
+        )
     }
 }
 
@@ -212,23 +237,24 @@ fun ErrorAnimation(message: String) {
 }
 
 @Composable
-fun BookList(books: List<BookItem>) {
+fun BookList(books: List<BookItem>, onBookClick: (BookItem) -> Unit) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 150.dp),
         contentPadding = PaddingValues(8.dp)
     ) {
         items(books) { book ->
-            BookItem(book)
+            BookItem(book, onBookClick)
         }
     }
 }
 
 @Composable
-fun BookItem(book: BookItem) {
+fun BookItem(book: BookItem, onBookClick: (BookItem) -> Unit) {
     Card(
         modifier = Modifier
             .padding(8.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable { onBookClick(book) },  // This makes the card clickable
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
