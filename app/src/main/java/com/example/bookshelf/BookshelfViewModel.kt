@@ -36,4 +36,9 @@ class BookshelfViewModel : ViewModel() {
             }
         }
     }
+
+    fun resetSearch() {
+        _searchQuery.value = ""
+        _uiState.value = BookshelfUiState.Initial
+    }
 }

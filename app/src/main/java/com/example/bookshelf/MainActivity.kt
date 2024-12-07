@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -53,6 +54,8 @@ fun BookshelfApp(viewModel: BookshelfViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     var isAnimating by remember { mutableStateOf(true) }
     var selectedBook by remember { mutableStateOf<BookItem?>(null) }
+    var isSearchActive by remember { mutableStateOf(false) }
+
 
     val onBookClick: (BookItem) -> Unit = { book ->
         selectedBook = book
@@ -79,14 +82,34 @@ fun BookshelfApp(viewModel: BookshelfViewModel = viewModel()) {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Text(
-                "Bookshelf",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                ),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isSearchActive) {
+                    IconButton(
+                        onClick = {
+                            isSearchActive = false
+                            viewModel.resetSearch()
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                }
+                Text(
+                    "Bookshelf",
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
 
             SearchBar(viewModel)
 
@@ -96,14 +119,23 @@ fun BookshelfApp(viewModel: BookshelfViewModel = viewModel()) {
                 targetState = uiState,
                 transitionSpec = {
                     fadeIn(animationSpec = tween(300)) + slideInVertically(animationSpec = tween(300)) togetherWith
-                    fadeOut(animationSpec = tween(300)) + slideOutVertically(animationSpec = tween(300))
+                            fadeOut(animationSpec = tween(300)) + slideOutVertically(animationSpec = tween(300))
                 }
             ) { state ->
                 when (state) {
-                    is BookshelfUiState.Initial -> IdleAnimation(isAnimating)
+                    is BookshelfUiState.Initial -> {
+                        isSearchActive = false
+                        IdleAnimation(isAnimating)
+                    }
                     is BookshelfUiState.Loading -> LoadingAnimation()
-                    is BookshelfUiState.Success -> BookList(books = state.books, onBookClick = onBookClick)
-                    is BookshelfUiState.Empty -> EmptyStateAnimation()
+                    is BookshelfUiState.Success -> {
+                        isSearchActive = true
+                        BookList(books = state.books, onBookClick = onBookClick)
+                    }
+                    is BookshelfUiState.Empty -> {
+                        isSearchActive = true
+                        EmptyStateAnimation()
+                    }
                     is BookshelfUiState.Error -> ErrorAnimation(state.message)
                 }
             }
